@@ -1,5 +1,13 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+import re
+import numpy as np
+
 class StyleLoss(nn.Module):
-  def __init__(self, style_outputs, style_map, content_map, patch_size=(3,3), stride=3):
+  def __init__(self, style_outputs, style_map, content_map, style_layers,
+   semantic_weight, variety, patch_size=(3,3), stride=3):
     super(StyleLoss, self).__init__()
     '''Convert the style image into patches, in order to compute the normalized
        cross correlation. 
@@ -8,6 +16,7 @@ class StyleLoss(nn.Module):
     '''
     self.mse = nn.MSELoss()
     self.patched_layers, self.norms = [], []
+    self.variety = variety
     style_maps_ds, self.content_maps_ds = [], []  # content maps used in compute_loss
      
     # detach style outputs
@@ -62,7 +71,7 @@ class StyleLoss(nn.Module):
       # normalize the cross corr matrix
       corr = torch.t(gen_norm) * (self.norms[layer] * corr)  
       # retreive the style image patches which have the highest correlation between the generated patches
-      if np.random.random(1) < variety:
+      if np.random.random(1) < self.variety:
         if corr.shape[1] < 4:
           topn = corr.shape[1]
         else:

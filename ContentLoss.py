@@ -1,3 +1,5 @@
+import torch.nn as nn
+
 class ContentLoss(nn.Module):
   def __init__(self, content_outputs):
     super(ContentLoss, self).__init__()

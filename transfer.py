@@ -1,4 +1,3 @@
-# https://github.com/paulwarkentin/pytorch-neural-doodle/blob/master/src/
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -25,6 +24,7 @@ import pdb
 
 import StyleLoss
 import ContentLoss
+import FeatureExtractor
 
 # Mounts your own google drive, so no files are shared between users.
 #from google.colab import drive
@@ -42,10 +42,8 @@ class Generator():
     Loads in the images and annotations, and runs style transfer
     using a patch based algorithm in multiple phases.
     '''
-    self.featureExtractor = FeatureExtractor()
+    self.featureExtractor = FeatureExtractor.FeatureExtractor(device)
     self.total_variation_loss = ContentLoss.TotalVariationLoss()
-#     self.load_model()
-#     args = self.read_args()
     self.load_and_verify_inputs()
     plt.ion()
 
@@ -246,7 +244,8 @@ class Generator():
     self.content_target = [(x.detach()) for x in self.content_target]
     self.style_target = [(x.detach()) for x in self.style_target]
     self.content_loss = ContentLoss.ContentLoss(self.content_target)
-    self.style_loss = StyleLoss.StyleLoss(self.style_target, self.style_map, self.content_map)
+    self.style_loss = StyleLoss.StyleLoss(self.style_target, self.style_map, self.content_map,
+     style_layers, semantic_weight, variety)
     
     
   def read_args(self):
@@ -336,7 +335,6 @@ output_size = None
 phases = 4
 seed = 'noise'
 iterations = 140
-device = 'gpu'
 print_every = 20
 save_every = 20
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
